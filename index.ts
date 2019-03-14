@@ -11,8 +11,8 @@ export class ExpressRouter {
     public static ResponseHandler = (data: any, req: express.Request, resp: express.Response) => resp.send(data)
     public static ErrorHandler = (err: Error, req: express.Request, resp: express.Response) => { resp.status(500); resp.send(err); }
 
-    public server: express.Express
-    private _router: express.Router;
+    public server: express.Express = undefined;
+    private _router: express.Router = undefined;
 
     private loadRouter() {
         this._router = express.Router();
