@@ -1,5 +1,5 @@
 {
-  "name": "express-router",
+  "name": "express-router-ts",
   "version": "0.0.1",
   "description": "Express Router Utility",
   "main": "dist/index.js",
