@@ -1,5 +1,5 @@
 import * as express from 'express';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { ExpressRouter } from '.';
 
 export type API_METHOD = 'GET' | 'POST' | 'PUT' | 'OPTIONS' | 'DELETE' | 'PATCH' | 'HEAD';
@@ -18,9 +18,11 @@ export class APIInfo {
     path: string;
     args?: ((req: express.Request) => any)[] = [];
     middlewares: IExpressRouterMiddleware[] = []
-    apiFunc: ExpressAsyncRequestHandler;
+    apiFunc: IExpressAsyncRequestHandler;
+    responseHandler: IExpressRouterResponseHandler;
+    errorHandler: IExpressRouterErrorHandler;
 
-    constructor(public key:string, opts: APIDefineOpts, apiFunc: ExpressAsyncRequestHandler) {
+    constructor(public key:string, opts: APIDefineOpts, apiFunc: IExpressAsyncRequestHandler) {
         this.method = opts.method || 'GET';
         this.path = opts.path || '';
         this.setArgs(opts.args);
@@ -44,22 +46,30 @@ export class APIInfo {
     registerAPI(server: () => express.Express, router: express.Router, caller: any) {
         const methodDefiner = this.getRouterDefineMethod(router);
         methodDefiner.call(router, this.path, (req, resp, next) => {
-            try {
-                for (const mw of this.middlewares) {
-                    await mw(req);
+            const process = async () => {
+                try {
+                    for (const mw of this.middlewares) {
+                        await mw(req);
+                    }
+        
+                    const args = this.args.map(arg => arg(req));
+                    const data = await this.apiFunc.apply(caller, args);
+
+                    const rspHandler = this.responseHandler || ExpressRouter.ResponseHandler;
+                    rspHandler && rspHandler.call(null, data, req, resp)
                 }
-    
-                const args = this.args.map(arg => arg(req));
-                return await this.apiFunc.apply(caller, args);
-            }
-            catch (err) {
-                if (err === ExpressRouter.NEXT) return;
-                server().emit('express_router:error', err, req);
-                if (APIInfo.Logging == true) {
-                    console.log(err);
+                catch (err) {
+                    if (err === ExpressRouter.NEXT) next();
+                    server().emit('express_router:error', err, req);
+                    if (APIInfo.Logging == true) {
+                        console.log(err);
+                    }
+                    const errHandler = this.errorHandler || ExpressRouter.ErrorHandler;
+                    errHandler && errHandler.call(null, err, req, resp)
                 }
-                throw err;
             }
+
+            process()
         });
     }
 
@@ -132,6 +142,22 @@ export function updateAPIInfo(updator: (api: APIInfo) => void) {
 
 export interface IExpressRouterMiddleware {
     (req: express.Request): Promise<void>;
+}
+
+export interface IExpressRouterMiddleware {
+    (req: express.Request): Promise<void>;
+}
+
+export interface IExpressAsyncRequestHandler {
+    (req: express.Request, resp: express.Response): Promise<any>;
+}
+
+export interface IExpressRouterResponseHandler {
+    (data: any, req: express.Request, resp: express.Request): void;
+}
+
+export interface IExpressRouterErrorHandler {
+    (err: Error, req: express.Request, resp: express.Request): void;
 }
 
 export function addMiddlewareDecor(middleware: IExpressRouterMiddleware) {
