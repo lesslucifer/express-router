@@ -153,11 +153,11 @@ export interface IExpressAsyncRequestHandler {
 }
 
 export interface IExpressRouterResponseHandler {
-    (data: any, req: express.Request, resp: express.Request): void;
+    (data: any, req: express.Request, resp: express.Response): void;
 }
 
 export interface IExpressRouterErrorHandler {
-    (err: Error, req: express.Request, resp: express.Request): void;
+    (err: Error, req: express.Request, resp: express.Response): void;
 }
 
 export function addMiddlewareDecor(middleware: IExpressRouterMiddleware) {

@@ -1,15 +1,15 @@
 import 'reflect-metadata';
 import * as express from 'express';
 import * as _ from 'lodash';
-import { APIInfo } from './api';
+import { APIInfo, IExpressRouterErrorHandler, IExpressRouterResponseHandler } from './api';
 import * as fs from 'fs';
 
 export class ExpressRouter {
     public static readonly NEXT = Symbol("express:next");
     public static readonly MSG_ERR = 'express_router:error';
     
-    public static ResponseHandler = (data: any, req: express.Request, resp: express.Response) => resp.send(data)
-    public static ErrorHandler = (err: Error, req: express.Request, resp: express.Response) => { resp.status(500); resp.send(err); }
+    public static ResponseHandler: IExpressRouterResponseHandler = (data: any, req: express.Request, resp: express.Response) => { resp.send(data); }
+    public static ErrorHandler: IExpressRouterErrorHandler = (err: Error, req: express.Request, resp: express.Response) => { resp.status(500); resp.send(err); }
 
     public server: express.Express = undefined;
     private _router: express.Router = undefined;
