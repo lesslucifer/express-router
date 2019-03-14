@@ -1,0 +1,33 @@
+{
+  "name": "express-router",
+  "version": "1.0.0",
+  "description": "Express Router Utility",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lesslucifer/express-router.git"
+  },
+  "keywords": [
+    "express",
+    "router",
+    "express-router"
+  ],
+  "author": "VuLQ",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lesslucifer/express-router/issues"
+  },
+  "homepage": "https://github.com/lesslucifer/express-router#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "lodash": "^4.17.11",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.122",
+    "@types/node": "^11.11.0"
+  }
+}
