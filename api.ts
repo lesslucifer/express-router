@@ -136,7 +136,7 @@ export function updateAPIInfo(updator: (api: APIInfo) => void) {
                 updator(api);
                 Reflect.defineMetadata('xm:apis', apis, target);
             }
-        })
+        }, 0)
     }
 }
 
