@@ -1,6 +1,6 @@
 {
   "name": "express-router-ts",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Express Router Utility",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
