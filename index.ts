@@ -76,6 +76,38 @@ export class ExpressRouter {
         }
     }
 
+    static routeAsync(handler: (req: express.Request) => Promise<any>, responseHandler?: IExpressRouterResponseHandler, errorHandler?: IExpressRouterErrorHandler): express.RequestHandler {
+        return (req, resp, next) => {
+            const process = async () => {
+                try {
+                    const data = await handler(req)
+
+                    const rspHandler = responseHandler || ExpressRouter.ResponseHandler;
+                    rspHandler && rspHandler.call(null, data, req, resp)
+                }
+                catch (err) {
+                    if (err === ExpressRouter.NEXT) next();
+                    // server().emit('express_router:error', err, req);
+                    if (APIInfo.Logging == true) {
+                        console.log(err);
+                    }
+                    const errHandler = errorHandler || ExpressRouter.ErrorHandler;
+                    errHandler && errHandler.call(null, err, req, resp)
+                }
+            }
+
+            process()
+        }
+    }
+
+    static routeSync(handler: (req: express.Request) => Promise<any>, responseHandler?: IExpressRouterResponseHandler, errorHandler?: IExpressRouterErrorHandler): express.RequestHandler {
+        async function promisifiedHandler(req: express.Request): Promise<any> {
+            return handler(req)
+        }
+
+        return this.routeAsync(promisifiedHandler, responseHandler, errorHandler);
+    }
+
     static promisify(cbFunc: Function, ...args: any[]) {
         return new Promise<string[]>((res, rej) => {
             cbFunc(...args, (err, results) => {
