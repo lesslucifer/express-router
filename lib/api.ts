@@ -4,7 +4,7 @@ import { ExpressRouter } from '.';
 
 export type API_METHOD = 'GET' | 'POST' | 'PUT' | 'OPTIONS' | 'DELETE' | 'PATCH' | 'HEAD';
 
-interface APIDefineOpts {
+export interface APIDefineOpts {
     method?: API_METHOD,
     path?: string;
     logging?: boolean;
