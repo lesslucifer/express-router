@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import chai = require('chai');
 import sinon = require('sinon');
 import 'mocha';
-import { Body } from '../decors';
 import { Test } from 'mocha';
 
 describe("# Arg decor", () => {
