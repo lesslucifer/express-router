@@ -29,22 +29,22 @@ export function argMapperDecor(arg: (req: express.Request) => any) {
     }
 }
 
-export function Req(arg?: (string | ((body: any) => any))[]) {
+export function Req(arg?: (string | ((body: any) => any))) {
     const mapper = _.isString(arg) ? req => _.get(req, arg) : (_.isFunction(arg) ? req => (arg as Function)(req) : req => req);
     return argMapperDecor(mapper);
 }
 
-export function Body(arg?: (string | ((body: any) => any))[]) {
+export function Body(arg?: (string | ((body: any) => any))) {
     const mapper = _.isString(arg) ? req => _.get(req.body, arg) : (_.isFunction(arg) ? req => (arg as Function)(req.body) : req => req.body);
     return argMapperDecor(mapper);
 }
 
-export function Params(arg?: (string | ((params: any) => any))[]) {
+export function Params(arg?: (string | ((params: any) => any))) {
     const mapper = _.isString(arg) ? req => _.get(req.params, arg) : (_.isFunction(arg) ? req => (arg as Function)(req.params) : req => req.params);
     return argMapperDecor(mapper);
 }
 
-export function Query(arg?: (string | ((query: any) => any))[]) {
+export function Query(arg?: (string | ((query: any) => any))) {
     const mapper = _.isString(arg) ? req => _.get(req.query, arg) : (_.isFunction(arg) ? req => (arg as Function)(req.query) : req => req.query);
     return argMapperDecor(mapper);
 }
