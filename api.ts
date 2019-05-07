@@ -7,7 +7,6 @@ export type API_METHOD = 'GET' | 'POST' | 'PUT' | 'OPTIONS' | 'DELETE' | 'PATCH'
 interface APIDefineOpts {
     method?: API_METHOD,
     path?: string;
-    args?: (string | ((req: express.Request) => any))[];
     logging?: boolean;
 }
 
@@ -16,16 +15,16 @@ export class APIInfo {
 
     method: API_METHOD;
     path: string;
-    args?: ((req: express.Request) => any)[] = [];
     middlewares: IExpressRouterMiddleware[] = []
     apiFunc: IExpressAsyncRequestHandler;
     responseHandler: IExpressRouterResponseHandler;
     errorHandler: IExpressRouterErrorHandler;
+    argMappers: {[index: number]: (req: express.Request) => any} = {}
+    nArgs: number = 0;
 
     constructor(public key:string, opts: APIDefineOpts, apiFunc: IExpressAsyncRequestHandler) {
         this.method = opts.method || 'GET';
         this.path = opts.path || '';
-        this.setArgs(opts.args);
         this.apiFunc = apiFunc;
     }
 
@@ -52,7 +51,10 @@ export class APIInfo {
                         await mw(req);
                     }
         
-                    const args = this.args.map(arg => arg(req));
+                    const args = Array(this.nArgs).fill(undefined);
+                    for (const idx in this.argMappers) {
+                        args[idx] = this.argMappers[idx](req);
+                    }
                     const data = await this.apiFunc.apply(caller, args);
 
                     const rspHandler = this.responseHandler || ExpressRouter.ResponseHandler;
@@ -70,17 +72,6 @@ export class APIInfo {
             }
 
             process()
-        });
-    }
-
-    setArgs(args: (string | ((req: express.Request) => any))[]) {
-        this.args = (args || []).map(arg => {
-            if (_.isString(arg)) return (req) => {
-                return _.get(req, arg);
-            }
-            if (_.isFunction(arg)) return arg;
-
-            return () => undefined;
         });
     }
 }
@@ -127,16 +118,20 @@ function defineAPI(target: any, key: string, desc: PropertyDescriptor, opts: API
     Reflect.defineMetadata('xm:apis', apis, target);
 }
 
+export function updateAPI(target: any, key: string | symbol, updator: (api: APIInfo) => void) {
+    setTimeout(() => {
+        const apis: APIInfo[] = Reflect.getMetadata('xm:apis', target) || [];
+        const api = apis.find(api => api.key == key);
+        if (api) {
+            updator(api);
+            Reflect.defineMetadata('xm:apis', apis, target);
+        }
+    }, 0)
+}
+
 export function updateAPIInfo(updator: (api: APIInfo) => void) {
     return (target: any, key: string, desc: PropertyDescriptor) => {
-        setTimeout(() => {
-            const apis: APIInfo[] = Reflect.getMetadata('xm:apis', target) || [];
-            const api = apis.find(api => api.key == key);
-            if (api) {
-                updator(api);
-                Reflect.defineMetadata('xm:apis', apis, target);
-            }
-        }, 0)
+        updateAPI(target, key, updator)
     }
 }
 
