@@ -61,7 +61,11 @@ export class APIInfo {
                     rspHandler && rspHandler.call(null, data, req, resp)
                 }
                 catch (err) {
-                    if (err === ExpressRouter.NEXT) next();
+                    if (err === ExpressRouter.NEXT) {
+                        next();
+                        return
+                    }
+                    
                     server().emit('express_router:error', err, req);
                     if (APIInfo.Logging == true) {
                         console.log(err);
