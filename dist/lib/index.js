@@ -34,7 +34,7 @@ class ExpressRouter {
         return undefined;
     }
     static async loadDir(server, dir, opts) {
-        opts = {};
+        opts = opts || {};
         function loadRouter(srcFile) {
             try {
                 const obj = require(srcFile);
