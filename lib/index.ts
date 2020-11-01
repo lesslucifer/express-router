@@ -38,7 +38,7 @@ export class ExpressRouter {
     }
 
     static async loadDir(server: express.Express, dir: string, opts?: IExpressRouterLoadDirOptions) {
-        opts = {}
+        opts = opts || {}
         function loadRouter(srcFile: string) {
             try {
                 const obj = require(srcFile);
