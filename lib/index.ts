@@ -18,11 +18,16 @@ export class ExpressRouter {
     public server: express.Express = undefined;
     private _router: express.Router = undefined;
 
+    public document: object = {}
+
     private loadRouter() {
         this._router = express.Router();
 
-        const apis: APIInfo[] = Reflect.getMetadata('xm:apis', Object.getPrototypeOf(this));
-        apis && apis.forEach(api => api.registerAPI(() => this.server, this._router, this));
+        this.APIInfos?.forEach(api => api.registerAPI(() => this.server, this._router, this));
+    }
+
+    get APIInfos(): APIInfo[] {
+        return Reflect.getMetadata('xm:apis', Object.getPrototypeOf(this)) ?? []
     }
 
     get Router() {
@@ -37,54 +42,55 @@ export class ExpressRouter {
         return undefined;
     }
 
-    static async loadDir(server: express.Express, dir: string, opts?: IExpressRouterLoadDirOptions) {
-        opts = opts || {}
+    static async loadRoutersInDir(dir: string, opts?: IExpressRouterLoadDirOptions) {
         function loadRouter(srcFile: string) {
             try {
                 const obj = require(srcFile);
                 if (!obj) return null;
 
                 const router = obj.default || obj;
-                if (router instanceof ExpressRouter) {
-                    router.server = server;
-                    return router;
-                }
+                if (router instanceof ExpressRouter) return router
             }
             catch (err) {
-                if (opts.log) {
-                    opts.log(`Express Router cannot load file ${srcFile} due to error: `);
-                    opts.log(err);
-                }
+                opts?.log?.(`Express Router cannot load file ${srcFile} due to error: `)
+                opts?.log?.(err)
                 return null;
             }
 
             return null;
         }
-
-        function path(file: string, router: ExpressRouter) {
-            const path = router.Path || file.substring(0, file.length - 3);
-            return path && (path.startsWith('/') ? path : `/${path}`);
-        }
-
         function isImportable(file: string): boolean {
             const filePart = file.slice(-3);
             return filePart === '.js' || (filePart === '.ts' && file.slice(-5) !== '.d.ts');
         }
 
+        function path(file: string, router: ExpressRouter) {
+            let prefix = router.Path || file.substring(0, file.length - 3);
+            return (prefix && (prefix.startsWith('/') ? prefix : `/${prefix}`)) || '';
+        }
+
         const dirFiles = await ExpressRouter.promisify(fs.readdir, dir);
         const jsFiles = dirFiles.filter(f => isImportable(f));
         const routers = jsFiles.map(f => ({
+            path: '',
             file: f,
             er: loadRouter(`${dir}/${f}`)
         })).filter(r => r.er != null);
+        routers.forEach(r => r.path = path(r.file, r.er))
+        return routers
+    }
+
+    static async loadDir(server: express.Express, dir: string, opts?: IExpressRouterLoadDirOptions) {
+        const routers = await this.loadRoutersInDir(dir, opts)
+
 
         for (const r of routers) {
-            const _path = opts.path || r.file
-            server.use(`${path(_path, r.er)}`, r.er.Router);
+            r.er.server = server
+            server.use(r.path, r.er.Router);
         }
     }
 
-    static promisify(cbFunc: Function, ...args: any[]) {
+    private static promisify(cbFunc: Function, ...args: any[]) {
         return new Promise<string[]>((res, rej) => {
             cbFunc(...args, (err, results) => {
                 if (err) {
