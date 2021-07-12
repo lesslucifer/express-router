@@ -61,3 +61,28 @@ export function Query(arg?: (string | ((query: any) => any))) {
     const mapper = _.isString(arg) ? req => _.get(req.query, arg) : (_.isFunction(arg) ? req => (arg as Function)(req.query) : req => req.query);
     return argMapperDecor(mapper);
 }
+
+// Doc
+export function pushDoc(f: _.PropertyPath, ...vals: any[]) {
+    return (doc: object) => {
+        if (_.get(doc, f) === undefined) {
+            return _.set(doc, f, [...vals])
+        }
+    
+        if (_.isArray(_.get(doc, f))) {
+            return _.get(doc, f).push(...vals)
+        }
+    }
+}
+
+export function setDoc(f: _.PropertyPath, val: any) {
+    return (doc: object) => _.set(doc, f, val)
+}
+
+export function SetDoc(f: _.PropertyPath, val: any) {
+    return updateDocument(setDoc(f, val))
+}
+
+export function PushDoc(f: _.PropertyPath, val: any) {
+    return updateDocument(pushDoc(f, val))
+}
