@@ -13,7 +13,7 @@ export class ExpressRouter {
     public static readonly NEXT = Symbol("express:next");
     
     public static ResponseHandler: IExpressRouterResponseHandler = (data: any, req: express.Request, resp: express.Response) => { resp.send(data); }
-    public static ErrorHandler: IExpressRouterErrorHandler = (err: Error, req: express.Request, resp: express.Response) => { resp.status(500); resp.send(err); }
+    public static ErrorHandler: IExpressRouterErrorHandler = (err: Error, req: express.Request, resp: express.Response) => { resp.status(_.isNumber(err && err['code']) ? err['code'] : 500); resp.send(err); }
 
     public server: express.Express = undefined;
     private _router: express.Router = undefined;
