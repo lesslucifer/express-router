@@ -1,19 +1,32 @@
-import { addMiddlewareDecor, updateAPIInfo, IExpressRouterResponseHandler, IExpressRouterErrorHandler, updateAPI } from "./api";
+import { updateAPIInfo, IExpressRouterResponseHandler, IExpressRouterErrorHandler, updateAPI, IExpressRouterAPIDocumentFunction, IExpressRouterMiddleware } from "./api";
 import * as _ from "lodash";
 import express = require("express");
 
 export * from './api'
 export * from './decors'
 
-export function ResponseHandler(handler: IExpressRouterResponseHandler) {
+export function updateDocument(docUpdator: IExpressRouterAPIDocumentFunction) {
+    return updateAPIInfo((api) => docUpdator(api.document))
+}
+
+export function addMiddlewareDecor(middleware: IExpressRouterMiddleware, document?: IExpressRouterAPIDocumentFunction) {
+    return updateAPIInfo((api) => {
+        api.middlewares.push(middleware);
+        document?.(api.document)
+    });
+}
+
+export function ResponseHandler(handler: IExpressRouterResponseHandler, document?: IExpressRouterAPIDocumentFunction) {
     return updateAPIInfo(api => {
         api.responseHandler = handler
+        document?.(api.document)
     })
 }
 
-export function ErrorHandler(handler: IExpressRouterErrorHandler) {
+export function ErrorHandler(handler: IExpressRouterErrorHandler, document?: IExpressRouterAPIDocumentFunction) {
     return updateAPIInfo(api => {
         api.errorHandler = handler
+        document?.(api.document)
     })
 }
 

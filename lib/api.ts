@@ -21,6 +21,7 @@ export class APIInfo {
     errorHandler: IExpressRouterErrorHandler;
     argMappers: {[index: number]: (req: express.Request) => any} = {}
     nArgs: number = 0;
+    document: object = {}
 
     constructor(public key:string, opts: APIDefineOpts, apiFunc: IExpressAsyncRequestHandler) {
         this.method = opts.method || 'GET';
@@ -139,6 +140,10 @@ export function updateAPIInfo(updator: (api: APIInfo) => void) {
     }
 }
 
+export interface IExpressRouterAPIDocumentFunction {
+    (document: object): void
+}
+
 export interface IExpressRouterMiddleware {
     (req: express.Request): Promise<void>;
 }
@@ -157,10 +162,4 @@ export interface IExpressRouterResponseHandler {
 
 export interface IExpressRouterErrorHandler {
     (err: Error, req: express.Request, resp: express.Response): void;
-}
-
-export function addMiddlewareDecor(middleware: IExpressRouterMiddleware) {
-    return updateAPIInfo((api) => {
-        api.middlewares.push(middleware);
-    });
 }

@@ -37,6 +37,12 @@ export class ExpressRouter {
         return undefined;
     }
 
+    document() {
+        const apis: APIInfo[] = Reflect.getMetadata('xm:apis', Object.getPrototypeOf(this));
+        if (!apis?.length) return []
+        return apis.map(api => api.document)
+    }
+
     static async loadDir(server: express.Express, dir: string, opts?: IExpressRouterLoadDirOptions) {
         opts = {}
         function loadRouter(srcFile: string) {
