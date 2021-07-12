@@ -6,14 +6,23 @@ import chaiHttp = require('chai-http');
 import sinon = require('sinon');
 import 'mocha';
 import { Test } from 'mocha';
-import { ExpressRouter, GET, Query } from '../lib';
+import { addMiddlewareDecor, ExpressRouter, GET, Query } from '../lib';
 import express = require('express');
 
 chai.use(chaiAsPromised);
 chai.use(chaiHttp);
 
-class ArgTestRouter extends ExpressRouter {
+function MiddlewareWithDoc() {
+    return addMiddlewareDecor(async (req) => {
+        console.log(req.body)
+    }, (doc) => _.set(doc, 'body', {
+        'hello': 'world'
+    }))
+}
+
+class DocTestRouter extends ExpressRouter {
     @GET({path : '/'})
+    @MiddlewareWithDoc()
     async echo(@Query('text') data: string) {
         return {data}
     }
@@ -21,11 +30,8 @@ class ArgTestRouter extends ExpressRouter {
 
 describe("# Arg decor", () => {
     let sandbox: sinon.SinonSandbox;
-    let server: express.Express
 
     before(() => {
-        server = express()
-        server.use('/test', new ArgTestRouter().Router)
     })
 
     beforeEach(async () => {
@@ -37,7 +43,10 @@ describe("# Arg decor", () => {
     })
 
     it('test argument', async () => {
-        const resp = await chai.request(server).get('/test?text=123123')
-        expect(resp.body).to.deep.equal({data: '123123'})
+        expect(new DocTestRouter().document()).to.deep.equal([{
+            body: {
+                hello: 'world'
+            }
+        }])
     })
 });
