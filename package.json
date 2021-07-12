@@ -1,6 +1,6 @@
 {
   "name": "express-router-ts",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Express Router Utility",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,7 +27,8 @@
   "dependencies": {
     "express": "^4.16.4",
     "lodash": "^4.17.11",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "typescript": "^4.3.5"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
@@ -45,7 +46,6 @@
     "deep-equal-in-any-order": "^1.1.8",
     "mocha": "^5.2.0",
     "sinon": "^7.1.1",
-    "ts-node": "^7.0.1",
-    "typescript": "^3.1.6"
+    "ts-node": "^7.0.1"
   }
 }
