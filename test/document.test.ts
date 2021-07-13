@@ -153,7 +153,7 @@ describe("# Document", () => {
         const doc = new EROpenAPIDocument()
         doc.info.title = 'Test Title'
         doc.info.version = '1.0.0'
-        doc.servers.push('http://localhost')
+        doc.servers.push({url: 'http://localhost'})
         doc.addRouter(new DocTestRouter(), undefined, '/test')
 
         expect(doc).to.deep.equalInAnyOrder({
@@ -162,7 +162,7 @@ describe("# Document", () => {
                 title: 'Test Title',
                 version: '1.0.0'
             },
-            servers: ['http://localhost'],
+            servers: [{url: 'http://localhost'}],
             paths: {
                 '/test/': {
                     get: {

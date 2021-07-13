@@ -102,7 +102,6 @@ describe("# Document", () => {
         const doc = new EROpenAPIDocument()
         doc.info.title = 'Test Title'
         doc.info.version = '1.0.0'
-        doc.servers.push('http://localhost')
         doc.components = EROpenAPIDocument.COMPONENTS
         doc.addRouter(new DocSchemaTestRouter(), undefined, '/test')
 
@@ -112,7 +111,7 @@ describe("# Document", () => {
                 title: 'Test Title',
                 version: '1.0.0'
             },
-            servers: ['http://localhost'],
+            servers: [],
             paths: {
                 '/test/': {
                     get: {

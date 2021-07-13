@@ -32,7 +32,7 @@ export class EROpenAPIDocument {
         title: 'Sample Swagger API',
         version: '1.0.0'
     }
-    servers: string[] = []
+    servers: object[] = []
     components: IEROpenAPIComponents = {}
     paths: { [path: string]: object } = {};
     [x: string]: any;
