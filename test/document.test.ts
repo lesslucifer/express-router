@@ -143,14 +143,16 @@ describe("# Document", () => {
                         description: 'Echo response',
                         security: [
                             {ServiceKeyHeader: []}
-                        ]
+                        ],
+                        responses: {'200': {'description': ''}}
                     },
                     post: {
                         tags: 'DocTestRouter',
                         description: 'POST Echo response',
                         security: [
                             {bearerAuth: []}
-                        ]
+                        ],
+                        responses: {'200': {'description': ''}}
                     }
                 },
                 '/test/putEcho': {
@@ -170,7 +172,8 @@ describe("# Document", () => {
                                     'requiredProperties': ['a']
                                 }
                             }
-                        }
+                        },
+                        responses: {'200': {'description': ''}}
                     }
                 }
             },

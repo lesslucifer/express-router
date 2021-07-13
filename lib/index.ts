@@ -83,7 +83,6 @@ export class ExpressRouter {
     static async loadDir(server: express.Express, dir: string, opts?: IExpressRouterLoadDirOptions) {
         const routers = await this.loadRoutersInDir(dir, opts)
 
-
         for (const r of routers) {
             r.er.server = server
             server.use(r.path, r.er.Router);

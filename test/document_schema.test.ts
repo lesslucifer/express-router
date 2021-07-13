@@ -43,17 +43,23 @@ EROpenAPIDocument.COMPONENTS.schemas['User'] = UserSchema
 interface IDocResponseOptions {
     status?: number
     contentType?: string
-    fields: any
+    fields?: object;
+    statusFields?: object;
 }
 function DocResponse(schema: any, opts?: IDocResponseOptions) {
     const status = opts?.status ?? 200
     const contentType = opts?.status ?? 'application/json'
-    const extra = opts?.fields ?? {}
 
-    return updateDocument(doc => _.setWith(doc, ['responses', status.toString(), 'content', contentType], {
-        schema,
-        ...extra
-    }, Object))
+    return updateDocument(doc => {
+        _.setWith(doc, ['responses', status.toString(), 'content', contentType], {
+            schema,
+            ...opts?.fields
+        }, Object)
+        _.setWith(doc, ['responses', status.toString()], {
+            ..._.get(doc, ['responses', status.toString()]),
+            ...opts?.statusFields
+        }, Object)
+    })
 }
 
 function RequireQueries(...fields: string[]) {
@@ -72,7 +78,7 @@ function RequireQueries(...fields: string[]) {
 class DocSchemaTestRouter extends ExpressRouter {
     @GET({path : '/'})
     @RequireQueries('text')
-    @DocResponse({'$ref': '#/components/schemas/User'})
+    @DocResponse({'$ref': '#/components/schemas/User'}, {fields: {description: 'hello'}, statusFields: {description: 'hello2'}})
     async echo(@Query('text') data: string) {
         return {data}
     }
@@ -80,9 +86,6 @@ class DocSchemaTestRouter extends ExpressRouter {
 
 describe("# Document", () => {
     let sandbox: sinon.SinonSandbox;
-    const DocTestRouterDoc = {
-
-    }
 
     before(() => {
     })
@@ -125,11 +128,13 @@ describe("# Document", () => {
                             '200': {
                                 'content': {
                                     'application/json': {
+                                        description: 'hello',
                                         schema: {
                                             '$ref': '#/components/schemas/User'
                                         }
                                     }
-                                }
+                                },
+                                description: 'hello2',
                             }
                         }
                     }

@@ -42,16 +42,33 @@ export class EROpenAPIDocument {
             let apiPath = [path ?? router.Path ?? '', api.path].join('/')
             while (apiPath.includes('//')) apiPath = apiPath.replace(/\/\//g, '/')
 
+            const key = `${apiPath}.${api.method.toLowerCase()}`
             _.set(this.paths, `${apiPath}.${api.method.toLowerCase()}`, {
                 ...defaultDocument,
                 ...router.document,
                 ...api.document
             })
+
+            // Customize for struture
+            const doc = _.get(this.paths, `${apiPath}.${api.method.toLowerCase()}`)
+            if (!_.get(doc, 'responses')) {
+                _.set(doc, 'responses', {
+                    '200': {}
+                })
+            }
+
+            const responses = _.get(doc, 'responses')
+            for (const stt in responses) {
+                if (_.isNumber(_.parseInt(stt)) && !_.get(responses, `${stt}.description`)) {
+                    _.set(responses, `${stt}.description`, '')
+                }
+            }
         })
     }
 
     async loadDir(dir: string, opts?: IExpressRouterLoadDirOptions, defaultDocument?: object) {
         const routers = await ExpressRouter.loadRoutersInDir(dir, opts)
+        await Promise.resolve(res => setTimeout(res))
         return routers.map(r => this.addRouter(r.er, defaultDocument, r.path))
     }
 }
