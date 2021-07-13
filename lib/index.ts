@@ -105,3 +105,4 @@ export class ExpressRouter {
 }
 
 export * from './decors';
+export * from './openapi.document';
