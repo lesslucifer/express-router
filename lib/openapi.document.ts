@@ -34,7 +34,7 @@ export class EROpenAPIDocument {
     }
     servers: string[] = []
     components: IEROpenAPIComponents = {}
-    paths: {[path: string]: object} = {};
+    paths: { [path: string]: object } = {};
     [x: string]: any;
 
     addRouter(router: ExpressRouter, defaultDocument?: object, path?: string) {
@@ -42,15 +42,19 @@ export class EROpenAPIDocument {
             let apiPath = [path ?? router.Path ?? '', api.path].join('/')
             while (apiPath.includes('//')) apiPath = apiPath.replace(/\/\//g, '/')
 
+            const pathParamMatches = execAll(apiPath, /:(\w+)/g)
+            pathParamMatches.forEach(m => apiPath = apiPath.replace(m[0], `{${m[1]}}`))
+            const pathParams = pathParamMatches.map(m => m[1])
+
             const key = `${apiPath}.${api.method.toLowerCase()}`
-            _.set(this.paths, `${apiPath}.${api.method.toLowerCase()}`, {
+            _.set(this.paths, key, {
                 ...defaultDocument,
                 ...router.document,
                 ...api.document
             })
 
             // Customize for struture
-            const doc = _.get(this.paths, `${apiPath}.${api.method.toLowerCase()}`)
+            const doc = _.get(this.paths, key)
             if (!_.get(doc, 'responses')) {
                 _.set(doc, 'responses', {
                     '200': {}
@@ -63,12 +67,39 @@ export class EROpenAPIDocument {
                     _.set(responses, `${stt}.description`, '')
                 }
             }
+
+            if (pathParams.length > 0) {
+                let params = _.get(doc, 'parameters') ?? []
+                if (_.isEmpty(params)) _.set(doc, 'parameters', params)
+                
+                pathParams.forEach(p => {
+                    if (params.find(pp => _.get(pp, 'name') == p && _.get(pp, 'in') == 'path')) return
+                    params.push({
+                        name: p,
+                        schema: {type: 'string'},
+                        in: 'path',
+                        required: true
+                    })
+                })
+            }
+
+            router.postProcessDocument(api, doc)
         })
     }
 
     async loadDir(dir: string, opts?: IExpressRouterLoadDirOptions, defaultDocument?: object) {
         const routers = await ExpressRouter.loadRoutersInDir(dir, opts)
-        await Promise.resolve(res => setTimeout(res))
+        await new Promise<void>((res) => setTimeout(res, 0));
         return routers.map(r => this.addRouter(r.er, defaultDocument, r.path))
     }
+}
+
+function execAll(str, regex) {
+    const matches = []
+    let match = regex.exec(str);
+    while (match) {
+        matches.push(match)
+        match = regex.exec(str);
+    }
+    return matches
 }

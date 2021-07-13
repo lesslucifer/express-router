@@ -5,7 +5,7 @@ import chaiAsPromised = require('chai-as-promised');
 import chaiHttp = require('chai-http');
 import sinon = require('sinon');
 import 'mocha';
-import { addMiddlewareDecor, ExpressRouter, GET, POST, pushDoc, PUT, Query, SetDoc, setDoc, updateDocument } from '../lib';
+import { addMiddlewareDecor, ExpressRouter, GET, POST, PushDoc, pushDoc, PUT, Query, SetDoc, setDoc, updateDocument } from '../lib';
 import { EROpenAPIDocument } from '../lib/openapi.document';
 import deepEqualInAnyOrder = require('deep-equal-in-any-order');
 
@@ -16,13 +16,13 @@ chai.use(deepEqualInAnyOrder)
 function AuthAPIKey() {
     return addMiddlewareDecor(async req => {
         console.log('Valid API Key')
-    }, pushDoc('security', {ServiceKeyHeader: []}))
+    }, pushDoc('security', { ServiceKeyHeader: [] }))
 }
 
 function AuthBearer() {
     return addMiddlewareDecor(async req => {
         console.log('Valid Bearer')
-    }, pushDoc('security', {bearerAuth: []}))
+    }, pushDoc('security', { bearerAuth: [] }))
 }
 
 function ValidBody(schema: object) {
@@ -40,18 +40,31 @@ class DocTestRouter extends ExpressRouter {
         'tags': 'DocTestRouter'
     }
 
-    @GET({path : '/'})
+    @GET({ path: '/' })
     @SetDoc('description', 'Echo response')
     @AuthAPIKey()
     async echo(@Query('text') data: string) {
-        return {data}
+        return { data }
     }
 
-    @POST({path : '/'})
+    @POST({ path: '/' })
     @AuthBearer()
     @SetDoc('description', 'POST Echo response')
     async postEcho(@Query('text') data: string) {
-        return {data}
+        return { data }
+    }
+
+    @POST({ path: '/:id/:xyz/hello' })
+    @AuthBearer()
+    @SetDoc('description', 'Test params')
+    @PushDoc('parameters', {
+        name: 'id',
+        description: 'Hello',
+        required: false,
+        in: 'path'
+    })
+    async testParams(@Query('text') data: string) {
+        return { data }
     }
 
     @PUT()
@@ -89,17 +102,31 @@ describe("# Document", () => {
     })
 
     it('Document of one router', async () => {
-        expect(new DocTestRouter().APIInfos.map(api => api.document)).to.deep.equal([
+        expect(new DocTestRouter().APIInfos.map(api => api.document)).to.deep.equalInAnyOrder([
             {
                 description: 'Echo response',
                 security: [
-                    {ServiceKeyHeader: []}
+                    { ServiceKeyHeader: [] }
                 ]
             },
             {
                 description: 'POST Echo response',
                 security: [
-                    {bearerAuth: []}
+                    { bearerAuth: [] }
+                ]
+            },
+            {
+                description: 'Test params',
+                security: [
+                    { bearerAuth: [] }
+                ],
+                parameters: [
+                    {
+                        name: 'id',
+                        description: 'Hello',
+                        required: false,
+                        in: 'path'
+                    }
                 ]
             },
             {
@@ -142,17 +169,41 @@ describe("# Document", () => {
                         tags: 'DocTestRouter',
                         description: 'Echo response',
                         security: [
-                            {ServiceKeyHeader: []}
+                            { ServiceKeyHeader: [] }
                         ],
-                        responses: {'200': {'description': ''}}
+                        responses: { '200': { 'description': '' } }
                     },
                     post: {
                         tags: 'DocTestRouter',
                         description: 'POST Echo response',
                         security: [
-                            {bearerAuth: []}
+                            { bearerAuth: [] }
                         ],
-                        responses: {'200': {'description': ''}}
+                        responses: { '200': { 'description': '' } }
+                    }
+                },
+                '/test/{id}/{xyz}/hello': {
+                    post: {
+                        tags: 'DocTestRouter',
+                        description: 'Test params',
+                        security: [
+                            { bearerAuth: [] }
+                        ],
+                        parameters: [
+                            {
+                                name: 'id',
+                                description: 'Hello',
+                                required: false,
+                                in: 'path'
+                            },
+                            {
+                                name: 'xyz',
+                                in: 'path',
+                                required: true,
+                                schema: { type: 'string' }
+                            }
+                        ],
+                        responses: { '200': { 'description': '' } }
                     }
                 },
                 '/test/putEcho': {
@@ -173,7 +224,7 @@ describe("# Document", () => {
                                 }
                             }
                         },
-                        responses: {'200': {'description': ''}}
+                        responses: { '200': { 'description': '' } }
                     }
                 }
             },

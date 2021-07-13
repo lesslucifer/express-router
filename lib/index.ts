@@ -42,6 +42,10 @@ export class ExpressRouter {
         return undefined;
     }
 
+    postProcessDocument(api: APIInfo, doc: object) {
+        
+    }
+
     static async loadRoutersInDir(dir: string, opts?: IExpressRouterLoadDirOptions) {
         function loadRouter(srcFile: string) {
             try {
